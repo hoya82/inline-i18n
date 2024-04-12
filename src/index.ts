@@ -150,10 +150,12 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
 }
 
 export type i18nFn = typeof i18nFnImpl & {
+  getLanguage: typeof i18nContext.getLanguage;
   getPriority: typeof i18nContext.getPriority;
   setPriority: typeof i18nContext.setPriority;
 };
 
+i18nFnImpl.getLanguage = i18nContext.getLanguage.bind(i18nContext);
 i18nFnImpl.getPriority = i18nContext.getPriority.bind(i18nContext);
 i18nFnImpl.setPriority = i18nContext.setPriority.bind(i18nContext);
 

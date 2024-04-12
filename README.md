@@ -19,6 +19,15 @@ console.log(i18n('Hello, world!')); // Hello, world!
 ```
 
 This library will automatically detect the user's preferred language if this is running in a browser environment.
+
+> Valid string syntax:
+>> `language_code:your_string`
+>
+> e.g. `"en:Hello, world!"`, `"ko:안녕, 세계!"`, `"en:fr:ko:ja"`
+>
+> Not valid:
+>> `"Hello, world!"`, `"␣ko:안녕, 세계!"`(space before language code)
+
 ```javascript
 /// Example 2
 import i18n from '@webstory/inline-i18n';
@@ -99,6 +108,40 @@ import i18n from '@webstory/inline-i18n';
 i18n.setPriority('popularity');
 console.log(i18n(['uz:Salom Dunyo!','ru:Привет, мир!'])); // Привет, мир!
 ```
+
+## API
+### `i18n(strings: string | string[]): string`
+Returns the best matching string from the given list of strings.
+
+### `i18n.setPriority(priority: string[] | 'popularity'): void`
+Sets the priority list of languages. This will override the default language detection.
+
+### `i18n.getPriority(): string[]`
+Returns the current priority list of languages.
+
+### `i18n.getLanguage(): string`
+Returns the first language code of the current priority list.
+
+### `class I18NContext`
+#### `new I18NContext(priority: string[] | 'popularity'): I18NContext`
+Creates a new I18NContext instance with the given priority list.
+If no priority list is given, it will follow the default language detection.
+
+#### `I18NContext.t(strings: string | string[]): string`
+Returns the best matching string from the given list of strings.
+Same as `i18n()` function, but this will use the priority list of the context.
+
+#### `I18NContext.setPriority(priority: string[] | 'popularity'): void`
+#### `I18NContext.getPriority(): string[]`
+#### `I18NContext.getLanguage(): string`
+Same as above, but this will only affect the context.
+
+## Constants
+### `LanguageCodes: string[]`
+An array of language codes sorted by popularity.
+
+### `I18NStringRegex: RegExp`
+A regular expression to match the i18n string format. Useful for debug.
 
 ## License
 MIT
