@@ -1,8 +1,8 @@
-import { beforeAll, describe, expect, jest, test } from '@jest/globals';
+import { beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 import type { Language, LanguagePriority, I18NDictionary, I18NString, I18NOptions } from "./types";
 import { LanguageCodes, I18NStringRegex } from "./constants";
-import { i18nContext, i18n, I18NContext } from './index';
+import { I18NContext, i18n } from './index';
 
 const strDict: I18NDictionary = {
   en: "Hello, World!",
@@ -156,10 +156,10 @@ describe('i18n - Multiple contexts', () => {
   beforeAll(() => {
     jest.spyOn(console, "warn").mockImplementation(() => { });
 
-    ctxKo = new I18NContext("ko", ["ko", "en"]);
-    ctxEn = new I18NContext("en", ["en", "ja"]);
-    ctxJa = new I18NContext("ja", ["ja", "en"]);
-    ctxRu = new I18NContext("ru", ["ru", "en"]);
+    ctxKo = new I18NContext(["ko", "en"]);
+    ctxEn = new I18NContext(["en", "ja"]);
+    ctxJa = new I18NContext(["ja", "en"]);
+    ctxRu = new I18NContext(["ru", "en"]);
   });
 
   test("Matching language", () => {
@@ -181,5 +181,56 @@ describe('i18n - Multiple contexts', () => {
 
   test("No matching language, no priority", () => {
     expect(ctxEn.t([`zh:${strDict.zh}`, `fr:${strDict.fr}`])).toBe(strDict.zh);
+  });
+});
+
+describe("Check README.md examples", () => {
+  let ctx: I18NContext;
+
+  beforeAll(() => {
+    jest.spyOn(console, "warn").mockImplementation(() => { });
+    jest.spyOn(navigator, "languages", "get").mockReturnValue(["ko-KR", "ko", "en-US", "en"]);
+  });
+
+  beforeEach(() => {
+    ctx = new I18NContext();
+  });
+
+  test("Example 1 - Wrap string", () => {
+    expect(ctx.t(`${strDict.en}`)).toBe(strDict.en);
+  });
+
+  test("Example 2 - Simple usage", () => {
+    expect(ctx.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.ko);
+    expect(ctx.t([`en:${strDict.en}`, `${strDict.ko}`])).toBe(strDict.en);
+  });
+
+  test("Example 3 - Set priority", () => {
+    ctx.setPriority(["en", "ko"]);
+    expect(ctx.t([`ko:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.en);
+
+    // Use Global instance
+    i18n.setPriority(["ko", "en"]);
+    expect(i18n([`ko:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.ko);
+    i18n.setPriority(navigator.languages as LanguagePriority); // Clear priority
+  });
+
+  test("Example 4 - Use Context", () => {
+    const ctxEn = new I18NContext(['en', 'ko']);
+    const ctxKo = new I18NContext(['ko', 'en']);
+
+    expect(ctxEn.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.en);
+    expect(ctxKo.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.ko);
+  });
+
+  test("Example 5 - Use Dict", () => {
+    expect(ctx.t(strDict)).toBe(strDict.ko); // Default language is ko
+    ctx.setPriority(['en', 'ko']);
+    expect(ctx.t(strDict)).toBe(strDict.en);
+  });
+
+  test("Example 6 - Order by popularity", () => {
+    ctx.setPriority("popularity");
+    expect(ctx.t([`uz:${strDict.uz}`, `ru:${strDict.ru}`])).toBe(strDict.ru);
   });
 });

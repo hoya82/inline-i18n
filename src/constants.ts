@@ -1,3 +1,4 @@
+// This LanguageCodes is popularity order.
 export const LanguageCodes = [
   "en", // English
   "zh", // Mandarin Chinese

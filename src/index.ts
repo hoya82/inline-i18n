@@ -2,72 +2,49 @@ import type { Language, LanguagePriority, I18NDictionary, I18NString, I18NOption
 import { LanguageCodes, I18NStringRegex } from "./constants";
 
 export class I18NContext {
-  private lang: Language | undefined;
   private priority: LanguagePriority;
 
-  constructor(lang?: Language, priority?: LanguagePriority) {
-    this.lang = undefined;
-    this.priority = "first-order";
+  constructor(priority?: LanguagePriority) {
+    this.priority = [...LanguageCodes];
 
     // Set default language and priority
     // If browser default locale can get, set it.
-    if (!lang && !priority && navigator && navigator.languages) {
+    if (!priority && navigator && navigator.languages) {
       // Filter out the languages that are not in the LanguageCodes
       const langs = navigator.languages.filter((lang) => LanguageCodes.includes(lang as Language));
-      if (langs.length > 0) {
-        this.lang = langs[0] as Language;
-      }
-
       this.priority = langs as LanguagePriority;
     }
 
     // Overriding the default language and priority if provided
-    if (lang) this.setLanguage(lang);
     if (priority) this.setPriority(priority);
-
-    // Set the primary language if provided priority but not language
-    if (!lang && Array.isArray(priority)) {
-      this.setLanguage(this.priority[0] as Language);
-    }
   }
 
   getLanguage() {
-    return this.lang;
-  }
-
-  setLanguage(lang: Language) {
-    if (!LanguageCodes.includes(lang)) {
-      throw new Error(`Invalid language: ${lang}`);
-    }
-    this.lang = lang;
+    return this.priority[0] as Language;
   }
 
   getPriority() {
     return this.priority;
   }
 
-  setPriority(priority: LanguagePriority) {
-    if (priority === "first-order") {
-      this.priority = priority;
+  setPriority(priority: LanguagePriority | "popularity") {
+    if (priority === "popularity") {
+      this.priority = [...LanguageCodes];
       return;
     }
 
-    if (priority.some((lang) => !LanguageCodes.includes(lang))) {
-      throw new Error(`Invalid language priority: ${priority}`);
-    }
-    this.priority = priority;
+    this.priority = priority.filter((lang) => LanguageCodes.includes(lang as Language)) as LanguagePriority;
   }
 
   t(str: I18NString): string {
     return i18n(str, {
-      lang: this.lang,
       priority: this.priority
     });
   }
 }
 
-// Default i18n context
-export const i18nContext = new I18NContext();
+// Global i18n context(shadowing)
+const i18nContext = new I18NContext();
 
 /**
  * i18n function
@@ -77,26 +54,22 @@ export const i18nContext = new I18NContext();
  * @apiVersion 1.0.0
  *
  * @param str     One of the following types: string, string[], I18NDictionary
- * @param option  One of the following types: Language, LanguagePriority, I18NOptions object
+ * @param option  I18NOptions object
  * @returns       matched string
  * @throws        Error if the given option is invalid
  */
-export function i18n(str: I18NString, option?: I18NOptions): string {
+function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
   // Parse options
-  let lang: Language | undefined;
-  let priority: LanguagePriority = "first-order";
+  let priority: LanguagePriority;
 
   if (option === undefined) { // Default
-    lang = i18nContext.getLanguage();
     priority = i18nContext.getPriority();
-  } else if (typeof option === "string") { // set language directly
-    lang = option as Language;
-  } else if (Array.isArray(option)) { // set language priority
-    priority = option;
-    lang = priority[0];
   } else if (typeof option === "object") { // set language and priority via options object
-    lang = option.lang;
-    priority = option.priority || "first-order";
+    if (!option.priority || option.priority === "popularity") {
+      priority = [...LanguageCodes];
+    } else {
+      priority = option.priority;
+    }
   } else {
     throw new Error(`Invalid i18n option: ${option}`);
   }
@@ -154,13 +127,6 @@ export function i18n(str: I18NString, option?: I18NOptions): string {
     return "�";
   }
 
-  // # Match try 1
-  // If there is exact matching language, return it
-  if (lang && langMap.has(lang)) {
-    return langMap.get(lang) as string;
-  }
-
-  // # Match try 2
   // If there is priority, return the first matching language
   if (Array.isArray(priority)) {
     for (const p of priority) {
@@ -170,14 +136,7 @@ export function i18n(str: I18NString, option?: I18NOptions): string {
     }
   }
 
-  // # Match try 3
-  // If priority defined as "first-order", return the first element
-  if (priority === "first-order" && langMap.size > 0) {
-    const firstLang = langMap.values().next().value;
-    return firstLang;
-  }
-
-  // # Match try 4 - fallback
+  // # Fallback
   // If still not found, return the first element
   // Condition: No matching language, no priority exists
   // but there is at least one element in the langMap
@@ -189,3 +148,14 @@ export function i18n(str: I18NString, option?: I18NOptions): string {
   // This function must not reach here
   throw new Error("Unexpected error");
 }
+
+export type i18nFn = typeof i18nFnImpl & {
+  getPriority: typeof i18nContext.getPriority;
+  setPriority: typeof i18nContext.setPriority;
+};
+
+i18nFnImpl.getPriority = i18nContext.getPriority.bind(i18nContext);
+i18nFnImpl.setPriority = i18nContext.setPriority.bind(i18nContext);
+
+export const i18n = i18nFnImpl as i18nFn;
+export default i18n as i18nFn;
