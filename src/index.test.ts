@@ -114,24 +114,24 @@ describe('i18n - Multiple contexts', () => {
     ctxRu = new I18NContext("ru", ["ru", "en"]);
   });
 
-  test("Matching country", () => {
+  test("Matching language", () => {
     expect(ctxKo.t(strDict)).toBe(strDict.ko);
     expect(ctxEn.t(strDict)).toBe(strDict.en);
     expect(ctxJa.t(strDict)).toBe(strDict.ja);
     expect(ctxRu.t(strDict)).toBe(strDict.ru);
   });
 
-  test("Matching country with array", () => {
+  test("Matching language with array", () => {
     expect(ctxKo.t(strArrWithCode)).toBe(strDict.ko);
     expect(ctxEn.t(strArrWithCode)).toBe(strDict.en);
     expect(ctxJa.t(strArrWithCode)).toBe(strDict.ja);
   });
 
-  test("No matching country", () => {
+  test("No matching language", () => {
     expect(ctxRu.t(strArrWithCode)).toBe(strDict.en);
   });
 
-  test("No matching country, no priority", () => {
+  test("No matching language, no priority", () => {
     expect(ctxEn.t([`zh:${strDict.zh}`, `fr:${strDict.fr}`])).toBe(strDict.zh);
   });
 });
