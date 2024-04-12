@@ -1,5 +1,5 @@
 {
-  "name": "inline-i18n",
+  "name": "@webstory/inline-i18n",
   "version": "0.0.1",
   "description": "Simple, fast and configuable internationalization library",
   "type": "module",
