@@ -8,6 +8,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "lib": ["es2016", "dom"],
 
     /* Emit */
     "declaration": true,
