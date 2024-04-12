@@ -5,7 +5,7 @@ Simple i18n library for Browser and nodejs environments.
 ## Install
 
 ```bash
-npm install inline-i18n
+npm install @webstory/inline-i18n
 ```
 
 ## Simple usage
