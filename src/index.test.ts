@@ -61,15 +61,63 @@ describe('i18n - Browser environment, set language option(ko, en)', () => {
   test("array(with language code, second order)", () => {
     expect(ctx.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.ko);
   });
+
+  test("array(with language code, ['en', ja])", () => {
+    expect(ctx.t([`en:${strDict.en}`, `ja:${strDict.ja}`])).toBe(strDict.en);
+  });
+
+  test("language on the middle of array", () => {
+    expect(ctx.t([`en:${strDict.en}`, `ko:${strDict.ko}`, `ru:${strDict.ru}`, `ja:${strDict.ja}`])).toBe(strDict.ko);
+  });
+
+  test("use dictionary object - ko", () => {
+    expect(ctx.t(strDict)).toBe(strDict.ko);
+  });
+
+  test("use dictionary object - en", () => {
+    const omittedDict = { ...strDict };
+    delete omittedDict.ko;
+    expect(ctx.t(omittedDict)).toBe(strDict.en);
+  });
+
+  test("no preferred language, array parameter", () => {
+    expect(ctx.t([`zh:${strDict.zh}`, `fr:${strDict.fr}`])).toBe(strDict.zh);
+  });
+
+  test("no preferred language, object parameter", () => {
+    const dict = {
+      "fr": "Bonjour, le monde!",
+      "zh": "你好，世界！",
+    }
+    expect(ctx.t(dict)).toBe(strDict.fr);
+  });
 });
 
-describe('i18n - Browser environment, set language option(jp, en)', () => {
+describe('i18n - Browser environment, set language option(ja, en)', () => {
   let ctx: I18NContext;
 
   beforeAll(() => {
     jest.spyOn(console, "warn").mockImplementation(() => { });
     jest.spyOn(navigator, "languages", "get").mockReturnValue(["ja-JP", "ja", "en-US", "en"]);
     ctx = new I18NContext();
+  });
+
+  test("string(ja match)", () => {
+    expect(ctx.t(`ja:${strDict.ja}`)).toBe(strDict.ja);
+  });
+
+  test("array(ja match)", () => {
+    expect(ctx.t([`ja:${strDict.ja}`])).toBe(strDict.ja);
+  });
+
+  test("object(ja match)", () => {
+    expect(ctx.t(strDict)).toBe(strDict.ja);
+  });
+
+  test("object(en match)", () => {
+    const omittedDict = { ...strDict };
+    delete omittedDict.ja;
+    expect(ctx.t(omittedDict)).toBe(strDict.en);
   });
 
   test("string(no language code)", () => {
@@ -89,7 +137,7 @@ describe('i18n - Browser environment, set language option(jp, en)', () => {
   });
 
   test("array(with language code, second order)", () => {
-    expect(ctx.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.en);
+    expect(ctx.t([`en:${strDict.en}`, `ja:${strDict.ja}`])).toBe(strDict.ja);
   });
 
   test("invalid syntax, but have matching language", () => {
