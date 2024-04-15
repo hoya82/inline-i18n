@@ -5,7 +5,7 @@ export class I18NContext {
   private priority: LanguagePriority;
 
   constructor(priority?: LanguagePriority) {
-    this.priority = [...LanguageCodes];
+    this.priority = [];
 
     // Set default language and priority
     // If browser default locale can get, set it.
@@ -13,13 +13,18 @@ export class I18NContext {
       // Filter out the languages that are not in the LanguageCodes
       const langs = navigator.languages.filter((lang) => LanguageCodes.includes(lang as Language));
       this.priority = langs as LanguagePriority;
+      return;
     }
 
-    // Overriding the default language and priority if provided
+    // Override the default language priority if provided
     if (priority) this.setPriority(priority);
+    else this.priority = [...LanguageCodes];
   }
 
   getLanguage() {
+    if (this.priority.length === 0) {
+      throw new Error("No language is set");
+    }
     return this.priority[0] as Language;
   }
 
@@ -60,15 +65,28 @@ const i18nContext = new I18NContext();
  */
 function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
   // Parse options
-  let priority: LanguagePriority;
+  let priority: LanguagePriority = [];
 
-  if (option === undefined) { // Default
+  // Default: option is undefined
+  if (option === undefined) {
     priority = i18nContext.getPriority();
-  } else if (typeof option === "object") { // set language and priority via options object
-    if (!option.priority || option.priority === "popularity") {
-      priority = [...LanguageCodes];
-    } else {
+  } else if (typeof option === "object") {
+    // set language and priority via options object
+    if (Array.isArray(option.priority)) {
+      if (option.priority.length === 0) {
+        throw new Error(`Invalid i18n option: ${option}`);
+      }
+
       priority = option.priority;
+    } else if (typeof option.priority === "string") {
+      // option given as string
+      switch (option.priority) {
+        case "popularity":
+          priority = [...LanguageCodes];
+          break;
+        default:
+          throw new Error(`Invalid i18n option: ${option}`);
+      }
     }
   } else {
     throw new Error(`Invalid i18n option: ${option}`);
@@ -78,7 +96,7 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
   // If str type is string, return this.
   if (typeof str === "string") {
     if (I18NStringRegex.test(str)) {
-      const [_, t] = str.split(":", 2);
+      const [/*l*/, t] = str.split(":", 2);
       if (typeof t !== "string") {
         console.warn(`Invalid i18n syntax: ${str}`);
         return str;
@@ -138,7 +156,7 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
 
   // # Fallback
   // If still not found, return the first element
-  // Condition: No matching language, no priority exists
+  // Condition: No language priority exists
   // but there is at least one element in the langMap
   if (langMap.size > 0) {
     const firstLang = langMap.values().next().value;

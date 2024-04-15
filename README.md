@@ -60,11 +60,22 @@ i18n.setPriority(['en', 'ko']);
 console.log(i18n(['en:Hello, world!','ko:안녕, 세계!'])); // Hello, world!
 ```
 
+### Fallback behavior: Return the first item
+If no matching language is found, the first item will be returned.
+```javascript
+/// Example 4
+import i18n from '@webstory/inline-i18n';
+
+i18n.setPriority(['zh']);
+
+console.log(i18n(['en:Hello, world!','ko:안녕, 세계!', "ru:Привет, мир!"])); // Hello, world!
+```
+
 ## Advanced usage
 ### Use Context
 Could be useful when your application have separated pages which have country-specific contents.
 ```javascript
-/// Example 4
+/// Example 5
 import { I18NContext } from '@webstory/inline-i18n';
 
 const i18nEn = new I18NContext(['en', 'ko']);
@@ -78,7 +89,7 @@ console.log(i18nKo.t(['en:Hello, world!','ko:안녕, 세계!'])); // 안녕, 세
 You can use `I18NDictionary` type to define your dictionary.
 This is mostly equal to `{ [key: string]: string }` type. Therefore you can use a plain object as a dictionary.
 ```javascript
-/// Example 5
+/// Example 6
 import type { I18NDictionary } from '@webstory/inline-i18n';
 import { i18n } from '@webstory/inline-i18n';
 
@@ -102,7 +113,7 @@ console.log(i18n(strDict)); // Hello, World!
 ### Order by popularity
 💥EXPERIMENTAL💥 You can use 'popularity' option on the `setPriority()` function.
 ```javascript
-/// Example 6
+/// Example 7
 import i18n from '@webstory/inline-i18n';
 
 i18n.setPriority('popularity');
@@ -110,7 +121,7 @@ console.log(i18n(['uz:Salom Dunyo!','ru:Привет, мир!'])); // Приве
 ```
 
 ## API
-### `i18n(strings: string | string[]): string`
+### `i18n(strings: string | string[] | I18NDictionary ): string`
 Returns the best matching string from the given list of strings.
 
 ### `i18n.setPriority(priority: string[] | 'popularity'): void`
@@ -127,21 +138,58 @@ Returns the first language code of the current priority list.
 Creates a new I18NContext instance with the given priority list.
 If no priority list is given, it will follow the default language detection.
 
-#### `I18NContext.t(strings: string | string[]): string`
+#### `I18NContext.t(strings: string | string[] | I18NDictionary): string`
 Returns the best matching string from the given list of strings.
 Same as `i18n()` function, but this will use the priority list of the context.
 
 #### `I18NContext.setPriority(priority: string[] | 'popularity'): void`
+Same as above, but this will only affect the context.
 #### `I18NContext.getPriority(): string[]`
+Same as above, but this will only affect the context.
 #### `I18NContext.getLanguage(): string`
 Same as above, but this will only affect the context.
 
 ## Constants
 ### `LanguageCodes: string[]`
 An array of language codes sorted by popularity.
+Full list is available in the [constants.ts](src/constants.ts) file.
 
 ### `I18NStringRegex: RegExp`
 A regular expression to match the i18n string format. Useful for debug.
+> `/^<language_code>:.+$/`
+
+#### Valid examples
+- `"en:Hello, world!"`
+- `"ko:안녕, 세계!"`
+- `"en:fr:ko:ja"`
+- `"en-US:Hello, world!"` (language code with region, not recommended)
+
+Language code with region will not pass the RegExp test, but it will be parsed correctly.
+
+#### Invalid examples
+- `"Hello, world!"` (no language code)
+- `"␣ko:안녕, 세계!"` (space before language code)
+- `"ko␣:안녕, 세계!"` (space between language code and colon)
+- `"EN:Hello, world!"` (uppercase language code)
+
+## Types
+Full type definitions are available in the [types.ts](src/types.ts) file.
+
+### `I18NDictionary`
+```typescript
+type I18NDictionary = { [key: string]: string };
+```
+
+### `I18NOption`
+```typescript
+type I18NOption = {
+  priority?: string[] | 'popularity';
+};
+```
+
+## Browser compatibility
+This library uses `navigator.languages` to detect the user's preferred language.
+Check [caniuse.com - navigator.languages](https://caniuse.com/mdn-api_navigator_languages) for more information.
 
 ## License
 MIT
