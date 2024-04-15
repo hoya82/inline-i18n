@@ -162,7 +162,6 @@ A regular expression to match the i18n string format. Useful for debug.
 - `"en:Hello, world!"`
 - `"ko:안녕, 세계!"`
 - `"en:fr:ko:ja"`
-- `"en-US:Hello, world!"` (language code with region, not recommended)
 
 Language code with region will not pass the RegExp test, but it will be parsed correctly.
 
@@ -171,6 +170,7 @@ Language code with region will not pass the RegExp test, but it will be parsed c
 - `"␣ko:안녕, 세계!"` (space before language code)
 - `"ko␣:안녕, 세계!"` (space between language code and colon)
 - `"EN:Hello, world!"` (uppercase language code)
+- `"en-US:Hello, world!"` (language code with region)
 
 ## Types
 Full type definitions are available in the [types.ts](src/types.ts) file.

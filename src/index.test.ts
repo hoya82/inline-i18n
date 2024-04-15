@@ -33,6 +33,53 @@ describe('Regex test', () => {
   });
 });
 
+describe('i18n - option test', () => {
+  let ctx: I18NContext;
+
+  beforeAll(() => {
+    jest.spyOn(console, "warn").mockImplementation(() => { });
+    ctx = new I18NContext();
+  });
+
+  test("Invalid option type", () => {
+    expect(() => ctx.setPriority(123 as unknown as LanguagePriority)).toThrow();
+  });
+
+  test("Empty priority", () => {
+    ctx.setPriority([] as unknown as LanguagePriority)
+    expect(() => ctx.getLanguage()).toThrow();
+  });
+
+  test("Invalid priority", () => {
+    ctx.setPriority(["zz"] as unknown as LanguagePriority);
+    expect(() => ctx.getLanguage()).toThrow();
+  });
+
+  test("Popularity", () => {
+    ctx.setPriority("popularity");
+    expect(ctx.t([`uz:${strDict.uz}`, `ru:${strDict.ru}`])).toBe(strDict.ru);
+  });
+
+  test("language with region code", () => {
+    ctx.setPriority(["en-US", "en-GB", "en"] as unknown as LanguagePriority);
+    expect(ctx.getLanguage()).toBe("en");
+    expect(ctx.t([`ko:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.en);
+    ctx.setPriority(["ko-KR", "ko", "en-US", "en"] as unknown as LanguagePriority);
+    expect(ctx.getLanguage()).toBe("ko");
+  });
+
+  test("language with region code, used in the data", () => {
+    // ctx.setPriority(["en-US", "en"]); // type error
+    ctx.setPriority(["ko-KR", "ko", "en-US", "en"] as unknown as LanguagePriority);
+    // language codes were filtered.
+    expect(ctx.getLanguage()).toBe("ko");
+    // Returns en because the first correct language code given.
+    expect(ctx.t([`ko-KR:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.en);
+    // Unknown language code is keep unparsed.
+    expect(ctx.t([`ko-KR:${strDict.ko}`])).toBe(`ko-KR:${strDict.ko}`);
+  });
+});
+
 describe('i18n - Browser environment, set language option(ko, en)', () => {
   let ctx: I18NContext;
 
