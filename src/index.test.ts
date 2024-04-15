@@ -269,7 +269,14 @@ describe("Check README.md examples", () => {
     i18n.setPriority(navigator.languages as LanguagePriority); // Clear priority
   });
 
-  test("Example 4 - Return the first item if no match", () => {
+  test("Example 4 - Use region code", () => {
+    ctx.setPriority(["en-GB", "en-US", "en"]);
+    expect(ctx.t([`en-US:${strDict.en}`, `en-GB:${strDict.en}-GB`])).toBe(strDict.en + '-GB');
+    expect(ctx.t([`en-GB:${strDict.en}-GB`, `en-US:${strDict.en}`])).toBe(strDict.en + '-GB');
+    expect(ctx.t([`en-CA:${strDict.en}-CA`, `en:${strDict.en}`])).toBe(strDict.en);
+  });
+
+  test("Example 5 - Return the first item if no match", () => {
     ctx.setPriority(["zh"]);
 
     expect(ctx.t([`en:${strDict.en}`, `ko:${strDict.ko}`, `ru:${strDict.ru}`])).toBe(strDict.en);
@@ -278,7 +285,7 @@ describe("Check README.md examples", () => {
     expect(ctx.t([`en:${strDict.en}`, `zh:${strDict.zh}`, `ru:${strDict.ru}`])).toBe(strDict.zh);
   });
 
-  test("Example 5 - Use Context", () => {
+  test("Example 6 - Use Context", () => {
     const ctxEn = new I18NContext(['en', 'ko']);
     const ctxKo = new I18NContext(['ko', 'en']);
 
@@ -286,14 +293,14 @@ describe("Check README.md examples", () => {
     expect(ctxKo.t([`en:${strDict.en}`, `ko:${strDict.ko}`])).toBe(strDict.ko);
   });
 
-  test("Example 6 - Use Dict", () => {
+  test("Example 7 - Use Dict", () => {
     expect(ctx.t(strDict)).toBe(strDict.ko); // Default language is ko
     ctx.setPriority(['en', 'ko']);
     expect(ctx.t(strDict)).toBe(strDict.en);
   });
 
 
-  test("Example 7 - Order by popularity", () => {
+  test("Example 8 - Order by popularity", () => {
     ctx.setPriority("popularity");
     expect(ctx.t([`uz:${strDict.uz}`, `ru:${strDict.ru}`])).toBe(strDict.ru);
   });

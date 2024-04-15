@@ -60,10 +60,21 @@ i18n.setPriority(['en', 'ko']);
 console.log(i18n(['en:Hello, world!','ko:안녕, 세계!'])); // Hello, world!
 ```
 
+Priority set with region code
+```javascript
+/// Example 4
+import i18n from '@webstory/inline-i18n';
+
+i18n.setPriority(['en-GB', 'en-US', 'en']);
+
+console.log(i18n(['en:Hello, world!','ko:안녕, 세계!'])); // Hello, world!
+console.log(i18n(['en-GB:Hello, UK!','en:Hello World!'])); // Hello, UK!
+```
+
 ### Fallback behavior: Return the first item
 If no matching language is found, the first item will be returned.
 ```javascript
-/// Example 4
+/// Example 5
 import i18n from '@webstory/inline-i18n';
 
 i18n.setPriority(['zh']);
@@ -75,7 +86,7 @@ console.log(i18n(['en:Hello, world!','ko:안녕, 세계!', "ru:Привет, м�
 ### Use Context
 Could be useful when your application have separated pages which have country-specific contents.
 ```javascript
-/// Example 5
+/// Example 6
 import { I18NContext } from '@webstory/inline-i18n';
 
 const i18nEn = new I18NContext(['en', 'ko']);
@@ -89,7 +100,7 @@ console.log(i18nKo.t(['en:Hello, world!','ko:안녕, 세계!'])); // 안녕, 세
 You can use `I18NDictionary` type to define your dictionary.
 This is mostly equal to `{ [key: string]: string }` type. Therefore you can use a plain object as a dictionary.
 ```javascript
-/// Example 6
+/// Example 7
 import type { I18NDictionary } from '@webstory/inline-i18n';
 import { i18n } from '@webstory/inline-i18n';
 
@@ -113,7 +124,7 @@ console.log(i18n(strDict)); // Hello, World!
 ### Order by popularity
 💥EXPERIMENTAL💥 You can use 'popularity' option on the `setPriority()` function.
 ```javascript
-/// Example 7
+/// Example 8
 import i18n from '@webstory/inline-i18n';
 
 i18n.setPriority('popularity');
@@ -130,9 +141,16 @@ Sets the priority list of languages. This will override the default language det
 ### `i18n.getPriority(): string[]`
 Returns the current priority list of languages.
 
+Unlike `i18n.getLanguage()`, this won't trim the region code.
+
+Result can be 'popularity' or empty array.
+
 ### `i18n.getLanguage(): string`
 Returns the first language code of the current priority list.
+
 This will trim the region code if it exists.
+
+Will throw an error if the priority list is empty.
 
 ### `class I18NContext`
 #### `new I18NContext(priority: string[] | 'popularity'): I18NContext`
@@ -157,7 +175,13 @@ Full list is available in the [constants.ts](src/constants.ts) file.
 
 ### `I18NStringRegex: RegExp`
 A regular expression to match the i18n string format. Useful for debug.
-> `/^<language_code>:.+$/`
+> `/^<language_code>(-<country_code)?:.+$/`
+> actual regex:
+> `/^[a-z]{2}(-[A-Z]{2,3})?:.+$/`
+
+### `LanguageCodeRegex: RegExp`
+A regular expression to match the language code format. Useful for debug.
+> `/^[a-z]{2}(-[A-Z]{2,3})?$/`
 
 #### Valid examples
 - `"en:Hello, world!"`
