@@ -20,13 +20,24 @@ console.log(i18n('Hello, world!')); // Hello, world!
 
 This library will automatically detect the user's preferred language if this is running in a browser environment.
 
-> Valid string syntax:
->> `language_code:your_string`
->
-> e.g. `"en:Hello, world!"`, `"ko:안녕, 세계!"`, `"en:fr:ko:ja"`
->
-> Not valid:
->> `"Hello, world!"`, `"␣ko:안녕, 세계!"`(space before language code)
+### Valid string syntax:
+```
+`<language_code>:your_string`
+`<language_code>-<region_code>:your_string`
+```
+
+Valid:
+> - `"en:Hello, world!"`, `"ko:안녕, 세계!"`
+> - `"en:fr:ko:ja"` (multiple colons are allowed - use only the first one)
+> - `"en-US:Hello, world!"` (language code with region)
+
+Not valid:
+> - `"Hello, world!"`(no language code)
+> - `"␣ko:안녕, 세계!"`(space before language code)
+> - `"ko␣:안녕, 세계!"`(space between language code and colon)
+> - `"EN:Hello, world!"`(uppercase language code)
+> - `"GB:Hello, world!"`(region code only)
+> - `"en-gb:Hello, UK!"`(lowercase region code)
 
 ```javascript
 /// Example 2
@@ -175,28 +186,13 @@ Full list is available in the [constants.ts](src/constants.ts) file.
 
 ### `I18NStringRegex: RegExp`
 A regular expression to match the i18n string format. Useful for debug.
-> `/^<language_code>(-<country_code)?:.+$/`
+> `/^<language_code>(-<region_code)?:.+$/`
 > actual regex:
 > `/^[a-z]{2}(-[A-Z]{2,3})?:.+$/`
 
 ### `LanguageCodeRegex: RegExp`
 A regular expression to match the language code format. Useful for debug.
 > `/^[a-z]{2}(-[A-Z]{2,3})?$/`
-
-#### Valid examples
-- `"en:Hello, world!"`
-- `"ko:안녕, 세계!"`
-- `"en:fr:ko:ja"`
-- `"en-US:Hello, world!"` (language code with region)
-
-Language code with region will not pass the RegExp test, but it will be parsed correctly.
-
-#### Invalid examples
-- `"Hello, world!"` (no language code)
-- `"␣ko:안녕, 세계!"` (space before language code)
-- `"ko␣:안녕, 세계!"` (space between language code and colon)
-- `"EN:Hello, world!"` (uppercase language code)
-- `"GB:Hello, world!"` (country code only)
 
 ## Types
 Full type definitions are available in the [types.ts](src/types.ts) file.
