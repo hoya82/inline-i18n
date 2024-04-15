@@ -1,5 +1,5 @@
-import type { Language, LanguagePriority, I18NDictionary, I18NString, I18NOptions } from "./types";
-import { LanguageCodes, I18NStringRegex } from "./constants";
+import type { Language, LanguageWithRegion, LanguagePriority, I18NDictionary, I18NString, I18NOptions } from "./types";
+import { LanguageCodes, I18NStringRegex, LanguageCodeRegex } from "./constants";
 
 export class I18NContext {
   private priority: LanguagePriority;
@@ -10,9 +10,7 @@ export class I18NContext {
     // Set default language and priority
     // If browser default locale can get, set it.
     if (!priority && navigator && navigator.languages) {
-      // Filter out the languages that are not in the LanguageCodes
-      const langs = navigator.languages.filter((lang) => LanguageCodes.includes(lang as Language));
-      this.priority = langs as LanguagePriority;
+      this.setPriority(navigator.languages as LanguagePriority);
       return;
     }
 
@@ -25,7 +23,15 @@ export class I18NContext {
     if (this.priority.length === 0) {
       throw new Error("No language is set");
     }
-    return this.priority[0] as Language;
+
+    for (let lang of this.priority) {
+      const [l, /*c*/] = lang.split("-");
+      if (LanguageCodes.includes(l as Language)) {
+        return l as Language;
+      }
+    }
+
+    return this.priority[0] as LanguageWithRegion;
   }
 
   getPriority() {
@@ -38,7 +44,20 @@ export class I18NContext {
       return;
     }
 
-    this.priority = priority.filter((lang) => LanguageCodes.includes(lang as Language)) as LanguagePriority;
+    const languageCodeWithRegionList = priority.filter((langCode) => {
+      if (LanguageCodeRegex.test(langCode)) {
+        const [l, c] = langCode.split("-", 2);
+        if (typeof c === 'string' && !/^[A-Z]{2,3}$/.test(c)) {
+          return false;
+        }
+
+        return LanguageCodes.includes(l as Language);
+      }
+
+      return false;
+    });
+
+    this.priority = languageCodeWithRegionList;
   }
 
   t(str: I18NString): string {
@@ -55,7 +74,7 @@ const i18nContext = new I18NContext();
  * i18n function
  *
  * @author Hoya Kim
- * @version 1.0.0
+ * @version 1.1.0
  * @apiVersion 1.0.0
  *
  * @param str     One of the following types: string, string[], I18NDictionary
@@ -74,7 +93,7 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
     // set language and priority via options object
     if (Array.isArray(option.priority)) {
       if (option.priority.length === 0) {
-        throw new Error(`Invalid i18n option: ${option}`);
+        throw new Error(`Invalid i18n option: ${JSON.stringify(option)}`);
       }
 
       priority = option.priority;
@@ -85,7 +104,7 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
           priority = [...LanguageCodes];
           break;
         default:
-          throw new Error(`Invalid i18n option: ${option}`);
+          throw new Error(`Invalid i18n option: ${JSON.stringify(option)}`);
       }
     }
   } else {
@@ -108,7 +127,7 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
     }
   }
 
-  const langMap = new Map<Language, string>();
+  const langMap = new Map<LanguageWithRegion, string>();
 
   // # Condition 2
   // If str type is array, parse it.
@@ -147,9 +166,18 @@ function i18nFnImpl(str: I18NString, option?: I18NOptions): string {
 
   // If there is priority, return the first matching language
   if (Array.isArray(priority)) {
+    // First try: language with region
     for (const p of priority) {
       if (langMap.has(p)) {
         return langMap.get(p) as string;
+      }
+    }
+
+    // Second try: language only
+    for (const p of priority) {
+      const [l, /*c*/] = p.split("-");
+      if (langMap.has(l as Language)) {
+        return langMap.get(l as Language) as string;
       }
     }
   }

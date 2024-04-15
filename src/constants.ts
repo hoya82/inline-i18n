@@ -91,6 +91,5 @@ export const LanguageCodes = [
   "xh", // Xhosa
 ] as const;
 
-export const I18NStringRegex = new RegExp(
-  `^(${LanguageCodes.join("|")}):(.+)$`
-);
+export const LanguageCodeRegex = /^[a-z]{2}(-[A-Z]{2,3})?$/;
+export const I18NStringRegex = /^[a-z]{2}(-[A-Z]{2,3})?:(.+)$/;

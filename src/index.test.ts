@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 import type { Language, LanguagePriority, I18NDictionary, I18NString, I18NOptions } from "./types";
-import { LanguageCodes, I18NStringRegex } from "./constants";
+import { LanguageCodes, I18NStringRegex, LanguageCodeRegex } from "./constants";
 import { I18NContext, i18n } from './index';
 
 const strDict: I18NDictionary = {
@@ -23,13 +23,20 @@ describe('Regex test', () => {
   test("Simple", () => {
     expect(I18NStringRegex.test(`ko:${strDict.ko}`)).toBe(true);
     expect(I18NStringRegex.test("Hello, World!")).toBe(false);
-    expect(I18NStringRegex.test("zz:Hello, World!")).toBe(false);
+    // Unknown language code, but valid syntax
+    expect(I18NStringRegex.test("zz:Hello, World!")).toBe(true);
+    // language code with region
+    expect(I18NStringRegex.test("en-GB:Hello, World!")).toBe(true);
+    // invalid syntax
+    expect(I18NStringRegex.test("0:Hello, World!")).toBe(false);
+    expect(I18NStringRegex.test("00:Hello, World!")).toBe(false);
+    expect(I18NStringRegex.test("GB:Hello, World!")).toBe(false);
   });
 
   test("Containing colon in the string", () => {
     expect(I18NStringRegex.test("ko:안녕, 세상:반가워~❤")).toBe(true);
     expect(I18NStringRegex.test("en:ko:fr")).toBe(true);
-    expect(I18NStringRegex.test("zz:Unknown code")).toBe(false);
+    expect(I18NStringRegex.test("zz:Unknown:code")).toBe(true);
   });
 });
 
@@ -46,7 +53,7 @@ describe('i18n - option test', () => {
   });
 
   test("Empty priority", () => {
-    ctx.setPriority([] as unknown as LanguagePriority)
+    ctx.setPriority([])
     expect(() => ctx.getLanguage()).toThrow();
   });
 
@@ -61,22 +68,22 @@ describe('i18n - option test', () => {
   });
 
   test("language with region code", () => {
-    ctx.setPriority(["en-US", "en-GB", "en"] as unknown as LanguagePriority);
+    ctx.setPriority(["en-US", "en-GB", "en"]);
     expect(ctx.getLanguage()).toBe("en");
     expect(ctx.t([`ko:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.en);
-    ctx.setPriority(["ko-KR", "ko", "en-US", "en"] as unknown as LanguagePriority);
+    ctx.setPriority(["ko-KR", "ko", "en-US", "en"]);
     expect(ctx.getLanguage()).toBe("ko");
   });
 
   test("language with region code, used in the data", () => {
     // ctx.setPriority(["en-US", "en"]); // type error
-    ctx.setPriority(["ko-KR", "ko", "en-US", "en"] as unknown as LanguagePriority);
+    ctx.setPriority(["ko-KR", "ko", "en-US", "en"]);
     // language codes were filtered.
     expect(ctx.getLanguage()).toBe("ko");
-    // Returns en because the first correct language code given.
-    expect(ctx.t([`ko-KR:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.en);
-    // Unknown language code is keep unparsed.
-    expect(ctx.t([`ko-KR:${strDict.ko}`])).toBe(`ko-KR:${strDict.ko}`);
+    expect(ctx.t([`ko-KR:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.ko);
+    expect(ctx.t([`ko:${strDict.ko}`, `en:${strDict.en}`])).toBe(strDict.ko);
+    expect(ctx.t([`en-US:${strDict.en}`, `ru-RU:${strDict.ru}`])).toBe(strDict.en);
+    expect(ctx.t([`en-US:${strDict.en}`, `en-GB:${strDict.en}-GB`])).toBe(strDict.en);
   });
 });
 

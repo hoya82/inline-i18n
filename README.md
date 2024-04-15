@@ -132,6 +132,7 @@ Returns the current priority list of languages.
 
 ### `i18n.getLanguage(): string`
 Returns the first language code of the current priority list.
+This will trim the region code if it exists.
 
 ### `class I18NContext`
 #### `new I18NContext(priority: string[] | 'popularity'): I18NContext`
@@ -162,6 +163,7 @@ A regular expression to match the i18n string format. Useful for debug.
 - `"en:Hello, world!"`
 - `"ko:안녕, 세계!"`
 - `"en:fr:ko:ja"`
+- `"en-US:Hello, world!"` (language code with region)
 
 Language code with region will not pass the RegExp test, but it will be parsed correctly.
 
@@ -170,7 +172,7 @@ Language code with region will not pass the RegExp test, but it will be parsed c
 - `"␣ko:안녕, 세계!"` (space before language code)
 - `"ko␣:안녕, 세계!"` (space between language code and colon)
 - `"EN:Hello, world!"` (uppercase language code)
-- `"en-US:Hello, world!"` (language code with region)
+- `"GB:Hello, world!"` (country code only)
 
 ## Types
 Full type definitions are available in the [types.ts](src/types.ts) file.
